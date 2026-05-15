@@ -26,6 +26,7 @@
 void SystemClock_Setup(void);
 void SetupSysTick_TIM(void);
 void SetupLED_GPIO(void);
+void Setup_SPI(void);
 void ToggleLED_GPIO(void);
 void Delay(uint32_t ticks);
 
@@ -87,6 +88,27 @@ void SetupLED_GPIO(void)
 	//Set PC13 as output with 10MHz max speed
 	GPIOC->CRH |= GPIO_CRH_MODE13_0;
 	GPIOC->CRH &= ~GPIO_CRH_CNF13;
+}
+
+void Setup_SPI(void)
+{
+	//Enable clock for Port A for SPI pins
+	RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
+	//Enable clock for SPI1
+	RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
+	//Enable clock for AFIO
+	RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
+
+	//Set pin modes
+	//PA5 - SPI1 SCK
+	//PA6 - SPI1 MISO
+	//PA7 - SPI1 MOSI
+	GPIOA->CRL |= GPIO_CRL_MODE5_0 | GPIO_CRL_MODE6_0 | GPIO_CRL_MODE7_0;
+	GPIOA->CRL &= ~GPIO_CRL_CNF5 | GPIO_CRL_CNF6 | GPIO_CRL_CNF7;
+
+	//Set alternate function for PA pins
+	AFIO->MAPR &= ~AFIO_MAPR_SPI1_REMAP;
+
 }
 
 void ToggleLED_GPIO(void)
