@@ -1,5 +1,8 @@
-../Src/main.c:31:5:main	8	static
-../Src/main.c:44:6:SystemClock_Setup	4	static
-../Src/main.c:68:6:SetupLED_GPIO	4	static
-../Src/main.c:78:6:ToggleLED_GPIO	4	static
-../Src/main.c:83:6:Delay	16	static
+../Src/main.c:35:5:main	8	static
+../Src/main.c:50:6:SystemClock_Setup	4	static
+../Src/main.c:80:6:SetupSysTick_TIM	8	static
+../Src/main.c:97:6:SetupLED_GPIO	4	static
+../Src/main.c:107:6:Setup_I2C	4	static
+../Src/main.c:128:6:ToggleLED_GPIO	4	static
+../Src/main.c:133:6:Delay	24	static
+../Src/main.c:141:6:SysTick_Handler	4	static

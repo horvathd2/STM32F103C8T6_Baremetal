@@ -1,4 +1,4 @@
-Src/main.o: ../Src/main.c \
+Src/system_stm32f1xx.o: ../Src/system_stm32f1xx.c \
  /home/hdani/STM32CubeIDE/workspace_1.19.0/STM32F103C8T6_Baremetal/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h \
  /home/hdani/STM32CubeIDE/workspace_1.19.0/STM32F103C8T6_Baremetal/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h \
  /home/hdani/STM32CubeIDE/workspace_1.19.0/STM32F103C8T6_Baremetal/CMSIS/Include/core_cm3.h \

@@ -26,20 +26,24 @@
 void SystemClock_Setup(void);
 void SetupSysTick_TIM(void);
 void SetupLED_GPIO(void);
-void Setup_SPI(void);
+void Setup_I2C(void);
 void ToggleLED_GPIO(void);
 void Delay(uint32_t ticks);
+
+volatile uint32_t ms_ticks = 0;   // Global millisecond counter
 
 int main(void)
 {
 	SystemClock_Setup();
+	SetupSysTick_TIM();
 	SetupLED_GPIO();
 
 	while(1)
 	{
 		//Toggle and delay the LED for 1 second (
 		ToggleLED_GPIO();
-		Delay(720000);
+		Delay(5000);
+		//Delay(720000);
 	}
 }
 
@@ -75,9 +79,19 @@ void SystemClock_Setup(void)
 
 void SetupSysTick_TIM(void)
 {
-	SysTick->CTRL = (1 << 2) |   // CLKSOURCE = 1 (AHB)
-            		(1 << 1) |   // TICKINT   = 1 (enable interrupt)
-					(1 << 0);    // ENABLE    = 1
+	SystemCoreClockUpdate();                    // Update SystemCoreClock variable
+
+	// SysTick is a 24-bit down-counter
+	SysTick->LOAD = (SystemCoreClock / 1000) - 1;   // Reload value for 1ms
+
+	SysTick->VAL  = 0;                          // Clear current value
+
+	// Configure Control Register:
+	// Bit 2: CLKSOURCE = 1 (Processor clock = HCLK)
+	// Bit 1: TICKINT   = 1 (Enable SysTick interrupt)
+	// Bit 0: ENABLE    = 1
+	SysTick->CTRL = (1 << 2) | (1 << 1) | (1 << 0);
+
 }
 
 void SetupLED_GPIO(void)
@@ -90,7 +104,7 @@ void SetupLED_GPIO(void)
 	GPIOC->CRH &= ~GPIO_CRH_CNF13;
 }
 
-void Setup_SPI(void)
+void Setup_I2C(void)
 {
 	//Enable clock for Port A for SPI pins
 	RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
@@ -118,5 +132,13 @@ void ToggleLED_GPIO(void)
 
 void Delay(uint32_t ticks)
 {
-	while(ticks--);
+	uint32_t init = ms_ticks;
+
+	while((ms_ticks - init) < ticks); //may be unsafe, possible race condition
+	//while(ticks--);
+}
+
+void SysTick_Handler(void)
+{
+	ms_ticks++;
 }
