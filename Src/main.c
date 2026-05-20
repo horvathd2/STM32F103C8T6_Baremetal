@@ -16,12 +16,7 @@
  ******************************************************************************
  */
 
-#include <stdint.h>
-#include "stm32f1xx.h"
-
-#if !defined(__SOFT_FP__) && defined(__ARM_FP)
-#warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
-#endif
+#include "main.h"
 
 void SystemClock_Setup(void);
 void SetupSysTick_TIM(void);
@@ -58,10 +53,10 @@ void SystemClock_Setup(void)
 	RCC->CFGR |= RCC_CFGR_PLLMULL9;
 
 	//Apply AHB/APB prescalers
-	//PPRE2 - APB2 divided by 2
+	//PPRE2 - APB2 divided by 2 - 36MHz
 	RCC->CFGR |= RCC_CFGR_PPRE2_DIV2;
-	//PPRE1 - APB1 divided by 4
-	RCC->CFGR |= RCC_CFGR_PPRE1_DIV4;
+	//PPRE1 - APB1 divided by 2 - 36MHz - MAX 36MHz!!
+	RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;
 
 	// Enable PLL
 	RCC->CR |= RCC_CR_PLLON;
@@ -106,23 +101,24 @@ void SetupLED_GPIO(void)
 
 void Setup_I2C(void)
 {
-	//Enable clock for Port A for SPI pins
-	RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
-	//Enable clock for SPI1
-	RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
+	//Enable clock for Port B for I2C pins
 	//Enable clock for AFIO
-	RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
+	RCC->APB2ENR |= RCC_APB2ENR_IOPBEN | RCC_APB2ENR_AFIOEN;
+	//Enable clock for I2C1
+	RCC->APB1ENR |= RCC_APB1ENR_I2C1EN;
 
-	//Set pin modes
-	//PA5 - SPI1 SCK
-	//PA6 - SPI1 MISO
-	//PA7 - SPI1 MOSI
-	GPIOA->CRL |= GPIO_CRL_MODE5_0 | GPIO_CRL_MODE6_0 | GPIO_CRL_MODE7_0;
-	GPIOA->CRL &= ~GPIO_CRL_CNF5 | GPIO_CRL_CNF6 | GPIO_CRL_CNF7;
+	//Clear config bits
+	GPIOB->CRL &= ~(GPIO_CRL_MODE6 | GPIO_CRL_MODE7);
+	GPIOB->CRL &= ~(GPIO_CRL_CNF6 | GPIO_CRL_CNF7);
+	//Set pin modes - alternate function output open-drain
+	//PB6 - I2C1 SCL
+	//PB7 - I2C1 SDA
+	GPIOB->CRL |= GPIO_CRL_MODE6 | GPIO_CRL_MODE7;
+	GPIOB->CRL |= GPIO_CRL_CNF6 | GPIO_CRL_CNF7;
 
-	//Set alternate function for PA pins
-	AFIO->MAPR &= ~AFIO_MAPR_SPI1_REMAP;
-
+	//Set alternate function for PB pins
+	//No remapping needed
+	AFIO->MAPR &= ~AFIO_MAPR_I2C1_REMAP;
 }
 
 void ToggleLED_GPIO(void)
@@ -130,12 +126,16 @@ void ToggleLED_GPIO(void)
 	GPIOC->ODR ^= GPIO_ODR_ODR13;
 }
 
+uint32_t GetTick(void)
+{
+	return ms_ticks;
+}
+
 void Delay(uint32_t ticks)
 {
-	uint32_t init = ms_ticks;
+	uint32_t init = GetTick();
 
 	while((ms_ticks - init) < ticks); //may be unsafe, possible race condition
-	//while(ticks--);
 }
 
 void SysTick_Handler(void)
